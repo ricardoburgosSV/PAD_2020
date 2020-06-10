@@ -44,20 +44,20 @@ void IINC(word_t index, word_t cons){
 	lframe.frame[index] += (char)cons;
 }
 
+void WIINC(short index, word_t cons){
+	// WIDE IINC
+	lframe.frame[(uint16_t)index] += (char)cons;
+}
+
 void WIDE(word_t inst, short index){
 	// WIDE INSTRUCTION (OPCODE 0xC4)
 	// Prefix instruction: next instruction has a 16-bit index
-
-	// fprintf(stdout, "REACHED WIDE\n");
 	switch (inst){
 		case OP_ILOAD: // WIDE ILOAD
-			fprintf(stderr, "ILOAD\n");
+			ILOAD((uint16_t)index);
 			break;
 		case OP_ISTORE: // WIDE ISTORE
-			fprintf(stderr, "ISTORE\n");
-			break;
-		case OP_IINC: // WIDE IINC
-			fprintf(stderr, "IINC\n");
+			ISTORE((uint16_t)index);
 			break;
 	}
 }

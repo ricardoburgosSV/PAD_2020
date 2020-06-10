@@ -111,17 +111,11 @@ void destroy_ijvm(){
 	free(lframe.frame);
 }
 
-// void run(){
-// 	// Step while you can
-// 	while (get_instruction() != OP_HALT){
-// 		step();
-// 	}
-// 	finished();
-// }
-
 void run(){
 	// Step while you can
-	while (step()){ }
+	while (step()){
+		
+	}
 	finished();
 }
 
@@ -253,9 +247,14 @@ bool step(){
 			break;
 		case OP_WIDE: //WIDE (0xC4)
 			a[0] = data_block.data[pc + 2];
-			a[1] = data_block.data[pc + 3];	
-			WIDE(data_block.data[pc + 1], to_be_u16(a));
-			pc += 3;
+			a[1] = data_block.data[pc + 3];
+			if (data_block.data[pc + 1] == OP_IINC){
+				WIINC(to_be_u16(a), data_block.data[pc + 4]);
+				pc += 4;
+			} else {
+				WIDE(data_block.data[pc + 1], to_be_u16(a));
+				pc += 3;
+			}
 			break;
 		// default: //DEFAULT: Do nothing
 			// return false;

@@ -13,6 +13,7 @@ JUNE 2020
 // LOCAL FRAME IMPLEMENTATION
 // ==========================
 typedef struct{
+	// local_frame_t *prev_frame; // Pointer to previous frame
 	int size;			// Frame size
 	int lsp;			// Local stack pointer
 	int lvp;			// Local variable pointer

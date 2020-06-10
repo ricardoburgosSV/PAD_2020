@@ -25,6 +25,9 @@ void ISTORE(word_t index);
 // IINC INSTRUCTION (OPCODE 0x84)
 void IINC(word_t index, word_t cons);
 
+// WIDE + IINC
+void WIINC(short index, word_t cons);
+
 // WIDE INSTRUCTION (OPCODE 0xC4)
 void WIDE(word_t inst, short index);
 
