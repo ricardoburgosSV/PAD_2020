@@ -96,8 +96,8 @@ int init_ijvm(char *binary_file){
 }
 
 byte_t get_instruction(){
-	// * @return The value of the current instruction represented as a byte_t.
-	// * This should NOT increase the program counter.
+	/* @return The value of the current instruction represented as a byte_t.
+	This should NOT increase the program counter. */
 	// fprintf(stderr, "PC: %d\n", pc);
 	// fprintf(stderr, "INSTRUCTION: 0x%02x\n", data_block.data[pc]);
 	return data_block.data[pc];
@@ -108,13 +108,13 @@ void destroy_ijvm(){
 	free(constant_block.data);
 	free(data_block.data);
 	free(stack.data);
-	free(lframe.frame);
+	free(current_frm->frame);
 }
 
 void run(){
 	// Step while you can
 	while (step()){
-		
+
 	}
 	finished();
 }
@@ -132,7 +132,7 @@ void set_output(FILE *f){
 word_t get_local_variable(int i){
 	 // @param i, index of variable to obtain.
 	 // @return Returns the i:th local variable of the current frame.
-	return lframe.frame[i];
+	return current_frm->frame[i];
 }
 
 word_t get_constant(int i){
@@ -150,7 +150,7 @@ word_t get_constant(int i){
 
 bool step(){
 	aux_pc = &pc; // Pointer to the program counter
-	byte_t a[2]; // Stores data for a short
+	byte_t arg[2]; // Stores argument data for a short
 
 	switch (get_instruction()){
 		case OP_BIPUSH: //BIPUSH (0x10)
@@ -161,12 +161,13 @@ bool step(){
 			DUP();
 			break;
 		case OP_ERR: //ERR (0xFE)
+			printf("*** AN ERROR HAS OCCURRED! ***\n");
 			return false;
 			break;
 		case OP_GOTO: //GOTO (0xA7)
-			a[0] = data_block.data[pc + 1];
-			a[1] = data_block.data[pc + 2];
-			GOTO(to_be_16(a));
+			arg[0] = data_block.data[pc + 1];
+			arg[1] = data_block.data[pc + 2];
+			GOTO(to_be_16(arg));
 			pc--;
 			break;
 		case OP_HALT: //HALT (0xFF)
@@ -179,21 +180,21 @@ bool step(){
 			IAND();
 			break;
 		case OP_IFEQ: //IFEQ (0x99)
-			a[0] = data_block.data[pc + 1];
-			a[1] = data_block.data[pc + 2];
-			IFEQ(to_be_16(a));
+			arg[0] = data_block.data[pc + 1];
+			arg[1] = data_block.data[pc + 2];
+			IFEQ(to_be_16(arg));
 			pc--;
 			break;
 		case OP_IFLT: //IFLT (0x9B)
-			a[0] = data_block.data[pc + 1];
-			a[1] = data_block.data[pc + 2];
-			IFLT(to_be_16(a));
+			arg[0] = data_block.data[pc + 1];
+			arg[1] = data_block.data[pc + 2];
+			IFLT(to_be_16(arg));
 			pc--;
 			break;
-		case OP_ICMPEQ: //IF_ICMPEQ (0x9F)
-			a[0] = data_block.data[pc + 1];
-			a[1] = data_block.data[pc + 2];
-			ICMPEQ(to_be_16(a));
+		case OP_ICMPEQ: //ICMPEQ (0x9F)
+			arg[0] = data_block.data[pc + 1];
+			arg[1] = data_block.data[pc + 2];
+			ICMPEQ(to_be_16(arg));
 			pc--;
 			break;
 		case OP_IINC: //IINC (0x84)
@@ -208,10 +209,10 @@ bool step(){
 			IN();
 			break;
 		case OP_INVOKEVIRTUAL: //INVOKEVIRTUAL (0xB6)
-			a[0] = data_block.data[pc + 1];
-			a[1] = data_block.data[pc + 2];
+			arg[0] = data_block.data[pc + 1];
+			arg[1] = data_block.data[pc + 2];
 			ppc = &pc;
-			INVOKEVIRTUAL(to_be_16(a));
+			INVOKEVIRTUAL(to_be_16(arg));
 			pc--;
 			break;
 		case OP_IOR: //IOR (0xB0)
@@ -229,12 +230,13 @@ bool step(){
 			ISUB();
 			break;
 		case OP_LDC_W: //LDC_W (0x13)
-			a[0] = data_block.data[pc + 1];
-			a[1] = data_block.data[pc + 2];
-			LDC_W(to_be_u16(a));
+			arg[0] = data_block.data[pc + 1];
+			arg[1] = data_block.data[pc + 2];
+			LDC_W(to_be_u16(arg));
 			pc += 2;
 			break;
 		case OP_NOP: //NOP (0x00)
+			// Do nothing
 			break;
 		case OP_OUT: //OUT (0xFD)
 			OUT();
@@ -246,13 +248,13 @@ bool step(){
 			SWAP();
 			break;
 		case OP_WIDE: //WIDE (0xC4)
-			a[0] = data_block.data[pc + 2];
-			a[1] = data_block.data[pc + 3];
+			arg[0] = data_block.data[pc + 2];
+			arg[1] = data_block.data[pc + 3];
 			if (data_block.data[pc + 1] == OP_IINC){
-				WIINC(to_be_u16(a), data_block.data[pc + 4]);
+				WIDE_IINC(to_be_u16(arg), data_block.data[pc + 4]);
 				pc += 4;
 			} else {
-				WIDE(data_block.data[pc + 1], to_be_u16(a));
+				WIDE(data_block.data[pc + 1], to_be_u16(arg));
 				pc += 3;
 			}
 			break;

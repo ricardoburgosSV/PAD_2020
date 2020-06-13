@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <ijvm.h>
 #include <stack.h>
+#include <method.h>
 
 /*
 VRIJE UNIVERSITEIT AMSTERDAM
@@ -61,6 +62,7 @@ word_t tos(){
 	// this function should return the word at the top of the stack of the current
 	// frame, interpreted as a signed integer.
 	return peek();
+	// return current_frm->frame[current_frm->lsp];
 }
 
 word_t *get_stack(){

@@ -14,25 +14,30 @@ RICARDO BURGOS LARA (2627499)
 JUNE 2020
 */
 
-/*
-HINT ON IJVM METHOD INVOCATION
+/* HINT ON IJVM METHOD INVOCATION
 https://users.cs.fiu.edu/~prabakar/cda4101/Common/notes/lecture20.html
 */
 
 // Frame initialization
-void frame_init(local_frame_t *fr){
+void frame_init(frame_t *fr) {
 	fr->size = 128;
-	fr->lsp = 0; //stack.sp;
-	fr->lvp = 1; //stack.sp + 1;
+	fr->prev = NULL;
+	fr->frame = malloc(fr->size * sizeof(word_t));
+	fr->lsp = 1;
 	fr->psp = stack.sp;
 	fr->ppc = get_program_counter();
+	fr->nargs = 0;
+	current_frm = fr;
+}
+
+// Frame memory allocation
+void frm_alloc(frame_t *fr){
 	fr->frame = malloc(fr->size * sizeof(word_t));
 }
 
-// Frame resize: doubles the frame size
-void frame_expand(local_frame_t *f){
-	f->size *= 2;
-	f->frame = realloc(f->frame, f->size * sizeof(word_t));
+// Frame memory deallocation
+void frm_free(frame_t *fr){
+	free(fr->frame);
 }
 
 void INVOKEVIRTUAL(short cp_reference){
@@ -49,62 +54,80 @@ void INVOKEVIRTUAL(short cp_reference){
 	byte_t *program = get_text();
 
 	// Get number of arguments for the calling method
-	byte_t aux[2];
-	aux[0] = program[method_address];
-	aux[1] = program[method_address + 1];
-	short number_of_args = to_be_16(aux);
-
+	byte_t nbr_args[2];
+	nbr_args[0] = program[method_address];
+	nbr_args[1] = program[method_address + 1];
+	short number_of_args = to_be_16(nbr_args);
 	// Get number of local variables for the calling method
-	aux[0] = program[method_address + 2];
-	aux[1] = program[method_address + 3];
-	short local_var_size = to_be_16(aux);
+	byte_t nbr_vars[2];
+	nbr_vars[0] = program[method_address + 2];
+	nbr_vars[1] = program[method_address + 3];
+	short local_var_size = to_be_16(nbr_vars);
 
-	// Initialize a new local frame
-	frame_init(&lframe);
+	// Create and initialize a new local frame
+	frame_t local;
+	local.size = 2 + number_of_args + local_var_size;
+	frm_alloc(&local);
+	local.prev = current_frm;
+	local.lsp = 1;
+	local.psp = stack.sp;
+	local.ppc = get_program_counter();
+	local.nargs = number_of_args;
 
 	// Push OBJREF to local frame
-	lframe.frame[0] = cp_reference;
-	lframe.lsp++;
+	local.frame[0] = cp_reference;
+	local.lsp++;
 
 	// Push method arguments to local frame
 	for (short i = number_of_args; i > 0; i--){
-		lframe.frame[i] = pop();
-		lframe.lsp++;
+		local.frame[i] = pop();
+		local.lsp++;
 	}
 
-	// Set space for local variables in local frame
+	// Push local variables to local frame
 	if (local_var_size > 0){
 		for (short i = number_of_args + 1; i <= number_of_args + local_var_size; i++){
-			lframe.lsp++;
+			local.frame[i] = get_local_variable(i);
+			local.lsp++;
 		}
 	}
 
-	// Push caller's PC to local frame
-	lframe.frame[lframe.lsp] = lframe.ppc;
-	lframe.lsp++;
-
 	// Set the program counter to the first method instruction
+	// and update current frame pointer
 	*ppc = method_address + 4;
-
-	// Pass the number of arguments to IRETURN to update stack pointer
-	nargs = number_of_args;
+	aux_frame = local;
+	current_frm = &aux_frame;
+	// current_frm = &local;
 }
 
 void IRETURN(){
 	// IRETURN INSTRUCTION (OPCODE 0xAC)
 	// Return from method with a word value
 
-	// Push returned value to local frame
-	lframe.frame[lframe.lsp] = pop();
+	fprintf(stderr, "IRETURN IN\n");
 
-	// Restore previous stack pointer - number of arguments took by INVOKEVIRTUAL
-	stack.sp = lframe.psp - nargs;
+	// Push returned value to local frame
+	current_frm->frame[current_frm->lsp] = pop();
+
+	// Restore previous stack pointer
+	stack.sp = current_frm->psp - current_frm->nargs;
 
 	// Overwrite the pushed OBJREF with the returned value
 	pop(); // pops OBJREF off the stack
-	push(lframe.frame[lframe.lsp]); // Pushes returned value at the top of local frame
+	// Pushes returned value at the top of local frame
+	push(current_frm->frame[current_frm->lsp]);
 
 	// Restore previous program counter
-	*ppc = lframe.ppc;
+	*ppc = current_frm->ppc;
 	// printf("PC restored to: %d\n", *ppc);
+
+	// restore current frame pointer to previous frame
+	// frame_t *used_frm = current_frm;
+	current_frm = current_frm->prev;
+	
+	// release memory
+	// frm_free(&aux_frame);
+	// frm_free(&local);
+
+	fprintf(stderr, "IRETURN OUT\n");
 }
