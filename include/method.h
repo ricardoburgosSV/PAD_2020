@@ -21,8 +21,7 @@ typedef struct frame{
 	short nargs;				// Number of arguments
 } frame_t;
 
-frame_t lframe; 				// Frame for main method
-frame_t aux_frame;				// Method's local frame
+frame_t lframe; 				// Frame for main methods
 frame_t *current_frm; 			// Current frame pointer
 int *ppc;						// Pointer to PC
 

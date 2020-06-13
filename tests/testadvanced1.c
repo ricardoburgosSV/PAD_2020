@@ -14,7 +14,6 @@
 
 /* uncomment the next line to see all succesful tests */
 // #define SHOW_ALL
-#define SHOW_ALL
 
 #define stringify(x) #x
 #define nputs(str) fprintf(stdout, str "\n")

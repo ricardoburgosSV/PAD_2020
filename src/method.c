@@ -65,46 +65,45 @@ void INVOKEVIRTUAL(short cp_reference){
 	short local_var_size = to_be_16(nbr_vars);
 
 	// Create and initialize a new local frame
-	frame_t local;
-	local.size = 2 + number_of_args + local_var_size;
-	frm_alloc(&local);
-	local.prev = current_frm;
-	local.lsp = 1;
-	local.psp = stack.sp;
-	local.ppc = get_program_counter();
-	local.nargs = number_of_args;
+	frame_t *local = malloc(sizeof(frame_t));
+	local->size = 2 + number_of_args + local_var_size;
+	frm_alloc(local);
+	local->prev = current_frm;
+	// fprintf(stderr, "INVOKEVIRTUAL CFRM: %p\n", current_frm);
+	local->lsp = 1;
+	local->psp = stack.sp;
+	local->ppc = get_program_counter();
+	local->nargs = number_of_args;
 
 	// Push OBJREF to local frame
-	local.frame[0] = cp_reference;
-	local.lsp++;
+	local->frame[0] = cp_reference;
+	local->lsp++;
 
 	// Push method arguments to local frame
 	for (short i = number_of_args; i > 0; i--){
-		local.frame[i] = pop();
-		local.lsp++;
+		local->frame[i] = pop();
+		local->lsp++;
 	}
 
 	// Push local variables to local frame
 	if (local_var_size > 0){
 		for (short i = number_of_args + 1; i <= number_of_args + local_var_size; i++){
-			local.frame[i] = get_local_variable(i);
-			local.lsp++;
+			local->frame[i] = get_local_variable(i);
+			local->lsp++;
 		}
 	}
 
 	// Set the program counter to the first method instruction
 	// and update current frame pointer
 	*ppc = method_address + 4;
-	aux_frame = local;
-	current_frm = &aux_frame;
-	// current_frm = &local;
+	current_frm = local;
 }
 
 void IRETURN(){
 	// IRETURN INSTRUCTION (OPCODE 0xAC)
 	// Return from method with a word value
 
-	fprintf(stderr, "IRETURN IN\n");
+	// fprintf(stderr, "IRETURN IN\n");
 
 	// Push returned value to local frame
 	current_frm->frame[current_frm->lsp] = pop();
@@ -119,15 +118,14 @@ void IRETURN(){
 
 	// Restore previous program counter
 	*ppc = current_frm->ppc;
-	// printf("PC restored to: %d\n", *ppc);
 
 	// restore current frame pointer to previous frame
-	// frame_t *used_frm = current_frm;
+	frame_t *used_frm = current_frm;
 	current_frm = current_frm->prev;
+	// fprintf(stderr, "IRETURN PFRM: %p\n", current_frm);
 	
 	// release memory
-	// frm_free(&aux_frame);
-	// frm_free(&local);
+	free(used_frm);
 
-	fprintf(stderr, "IRETURN OUT\n");
+	// fprintf(stderr, "IRETURN OUT\n");
 }
