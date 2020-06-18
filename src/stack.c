@@ -82,7 +82,7 @@ void IN(){
 	// Reads a character from the input and pushes it onto the stack
 	// If no character is available, 0 is pushed
 	char a = fgetc(in_f);
-	if (a == -1 || a > 255){
+	if (a == -1 || (int)(a) > 255){
 		push(0);
 	} else{
 		push(a);
@@ -95,7 +95,7 @@ void OUT(){
 	// Output the word at the top of the stack interpreted as ASCII to the
 	// output specified by the method set_output()
 	char a = (char)pop();
-	fprintf(out_f,"%c", a);
+	fprintf(out_f, "%c", a);
 }
 
 void IADD(){

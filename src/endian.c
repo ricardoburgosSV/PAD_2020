@@ -16,18 +16,12 @@ JUNE 2020
 
 // Swaps integers from little-endian to big-endian
 word_t swap_uint32(word_t num){
-	return 	((num>>24)&0xff) | 
-			((num<<8)&0xff0000) | 
-			((num>>8)&0xff00) | 
-			((num<<24)&0xff000000);
+	return ((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000);
 }
 
 // Convert a 4-byte array to a big-endian integer
 int to_big_end(byte_t *bytes){
-	return 	((bytes[0] & 0xFF) << 24) | 
-			((bytes[1] & 0xFF) << 16) | 
-			((bytes[2] & 0xFF) << 8) | 
-			(bytes[3] & 0xFF);
+	return ((bytes[0] & 0xFF) << 24) | ((bytes[1] & 0xFF) << 16) | ((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF);
 }
 
 // Convert a 4-byte array to a little-endian integer
