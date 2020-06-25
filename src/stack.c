@@ -4,6 +4,7 @@
 #include <ijvm.h>
 #include <stack.h>
 #include <method.h>
+#include <string.h>
 
 /*
 VRIJE UNIVERSITEIT AMSTERDAM
@@ -18,11 +19,11 @@ JUNE 2020
 // https://cryptii.com/pipes/integer-encoder
 
 /* STACK INITIALIZATION */
-
-void stack_init(){ //INITIALIZE STACK
+void stack_init(){
 	stack.size = 1024;
 	stack.sp = 0;
 	stack.data = malloc(stack.size * sizeof(word_t));
+	memset(stack.data, 0, stack.size);
 }
 
 /* ESSENTIAL STACK OPERATIONS */
@@ -54,7 +55,7 @@ word_t peek(){ //TOP
 
 int size(){ //SIZE
 	// Returns the size of the stack
-	return stack.size;
+	return stack.sp;
 }
 
 word_t tos(){
@@ -187,6 +188,7 @@ int stack_size(){
 
 void stack_expand(){
 	// Doubles the size of the stack when it becomes full
-	stack.size *= 2;
-	stack.data = realloc(stack.data, stack.size * sizeof(word_t));
+	stack.data = realloc(stack.data, 2 * stack.size * sizeof(word_t));
+	memset(stack.data + stack.size, 0, stack.size);
+	stack.size = 2 * stack.size;
 }

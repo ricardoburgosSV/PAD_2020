@@ -56,7 +56,7 @@ void INVOKEVIRTUAL(short cp_reference){
 
 	// Create and initialize a new local frame
 	frame_t *local = malloc(sizeof(frame_t));
-	local->size = 1 + number_of_args + local_var_size;
+	local->size = 2 + number_of_args + local_var_size;
 	local->frame = malloc(local->size * sizeof(word_t));
 	local->prev = current_frm;
 	local->lsp = 1;
@@ -65,9 +65,11 @@ void INVOKEVIRTUAL(short cp_reference){
 	local->nargs = number_of_args;
 
 	// Push method arguments to local frame
-	for (short i = number_of_args; i > 0; i--){
-		local->frame[i] = pop();
-		local->lsp++;
+	if (number_of_args > 0){
+		for (short i = number_of_args; i > 0; i--){
+			local->frame[i] = pop();
+			local->lsp++;
+		}
 	}
 
 	// Push local variables to local frame

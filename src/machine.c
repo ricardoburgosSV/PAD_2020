@@ -112,8 +112,6 @@ int init_ijvm(char *binary_file){
 byte_t get_instruction(){
 	/* @return The value of the current instruction represented as a byte_t.
 	This should NOT increase the program counter. */
-	// fprintf(stderr, "PC: %d\n", pc);
-	// fprintf(stderr, "INSTRUCTION: 0x%02x\n", data_block.data[pc]);
 	return data_block.data[pc];
 }
 
@@ -128,9 +126,6 @@ void destroy_ijvm(){
 void run(){
 	// Step while you can
 	while (step()){	}
-	// while (!finished()){
-	// 	step();
-	// }
 }
 
 void set_input(FILE *f){
@@ -279,12 +274,13 @@ bool step(){
 			stop_ijvm.invalid = true;
 			return false;
 	}
-	pc++;
+	
 	// Check if pc has reached the end of file
 	if (text_size() == pc){
-		fprintf(stderr, "END OF FILE!\n");
 		stop_ijvm.eof = true;
+		return false;
 	}
+	pc++;
 	return true;
 }
 

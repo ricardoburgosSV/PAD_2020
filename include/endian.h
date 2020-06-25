@@ -9,11 +9,11 @@ FACULTY OF SCIENCE
 B. COMPUTER SCIENCE
 COURSE: PROJECT APPLICATION DEVELOPMENT (X_400556)
 RICARDO BURGOS LARA (2627499)
-JUNE 2019
+JUNE 2020
 */
 
 // Swap to 32-bit IJVM words
-word_t swap_uint32(word_t num);
+uint32_t swap_uint32(uint32_t num);
 
 // 4-Byte array to big endian
 int to_big_end(byte_t *bytes);
