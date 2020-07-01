@@ -27,23 +27,6 @@ typedef struct buffer{
 	byte_t *data; 	// variable lenght data array
 } buffer_t;
 
-typedef struct {
-	// This struct stores halt conditions for the IJVM
-	_Bool eof;		// Execution reachs the end of text section
-	_Bool halt;		// HALT instruction reached
-	_Bool err;		// ERR instruction reached
-	_Bool invalid;	// invalid instruction reached
-} halt_t;
-
-halt_t stop_ijvm;
-
-void hc_init(halt_t halt_condition){
-	halt_condition.eof = false;
-	halt_condition.err = false;
-	halt_condition.halt = false;
-	halt_condition.invalid = false;
-}
-
 buffer_t read_block(FILE *fp){
 	// Reads a block from binary file "fp" and stores data in a buffer struct
 	
@@ -103,7 +86,6 @@ int init_ijvm(char *binary_file){
 
 	stack_init();			// Initialize stack
 	frame_init(&lframe);	// Initialize frame
-	hc_init(stop_ijvm);		// Initialize stop conditions
 	fclose(fp); 			// Close file
 
 	return 0;
@@ -170,7 +152,6 @@ bool step(){
 			DUP();
 			break;
 		case OP_ERR: //ERR (0xFE)
-			stop_ijvm.err = true;
 			printf("*** AN ERROR HAS OCCURRED! ***\n");
 			return false;
 			break;
@@ -181,7 +162,6 @@ bool step(){
 			pc--;
 			break;
 		case OP_HALT: //HALT (0xFF)
-			stop_ijvm.halt = true;
 			return false;
 			break;
 		case OP_IADD: //IADD (0x60)
@@ -271,15 +251,14 @@ bool step(){
 			break;
 		default:
 			//DEFAULT: Invalid instruction
-			stop_ijvm.invalid = true;
 			return false;
 	}
 	
 	// Check if pc has reached the end of file
 	if (text_size() == pc){
-		stop_ijvm.eof = true;
 		return false;
 	}
+
 	pc++;
 	return true;
 }
@@ -305,8 +284,5 @@ bool finished(){
 	// * reaching the end of the text section
 	// * encountering either the HALT/ERR instructions
 	// * encountering an invalid instruction
-	if (stop_ijvm.eof || stop_ijvm.halt || stop_ijvm.err || stop_ijvm.invalid){
-		return true;
-	}
-	return false;
+	return true;
 }
